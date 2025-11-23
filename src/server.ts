@@ -14,6 +14,7 @@ import { env } from "./env";
 import { complaintRoutes } from "./routes/complaints";
 import { categoryRoutes } from "./routes/category";
 import { userRoutes } from "./routes/user";
+import { commentRoutes } from "./routes/comment"
 
 import { prisma } from "./lib/prisma";
 
@@ -55,6 +56,10 @@ app.register(userRoutes, {
 app.register(categoryRoutes, {
   prefix: "/category",
 });
+
+app.register(commentRoutes, {
+  prefix: "/comment"
+})
 
 cron.schedule("*/10 * * * *", async () => {
   try {
