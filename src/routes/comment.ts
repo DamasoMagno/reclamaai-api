@@ -28,7 +28,7 @@ export const commentRoutes: FastifyPluginAsyncZod = async (app) => {
         skip,
         include: {
           user: true,
-          topic: true,
+          problem: true,
         },
         orderBy: { createdAt: "desc" },
       });
@@ -53,7 +53,7 @@ export const commentRoutes: FastifyPluginAsyncZod = async (app) => {
         where: { id },
         include: {
           user: true,
-          topic: true,
+          problem: true,
         },
       });
 
@@ -72,25 +72,25 @@ export const commentRoutes: FastifyPluginAsyncZod = async (app) => {
       schema: {
         body: z.object({
           content: z.string().min(1),
-          topicId: z.string(),
+          problemId: z.string(),
         }),
       },
     },
     async (request, reply) => {
-      const { content, topicId } = request.body;
+      const { content, problemId } = request.body;
 
       const userId = request.user.sub;
 
       // Verificar se o tópico existe
-      const topic = await prisma.topic.findUnique({ where: { id: topicId } });
-      if (!topic) {
+      const problem = await prisma.problem.findUnique({ where: { id: problemId } });
+      if (!problem) {
         return reply.status(404).send({ message: "Topic not found" });
       }
 
       const comment = await prisma.comment.create({
         data: {
           content,
-          topicId,
+          problemId,
           userId,
         },
       });

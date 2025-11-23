@@ -11,12 +11,12 @@ import {
 } from "fastify-type-provider-zod";
 import { env } from "./env";
 
-import { complaintRoutes } from "./routes/complaints";
+import { problemRoutes } from "./routes/problem";
 import { categoryRoutes } from "./routes/category";
 import { userRoutes } from "./routes/user";
 import { commentRoutes } from "./routes/comment"
 
-import { prisma } from "./lib/prisma";
+// import { prisma } from "./lib/prisma";
 
 const app = fastify().withTypeProvider<ZodTypeProvider>();
 
@@ -45,8 +45,8 @@ app.register(scalar, {
   routePrefix: "/docs",
 });
 
-app.register(complaintRoutes, {
-  prefix: "/complaint",
+app.register(problemRoutes, {
+  prefix: "/problem",
 });
 
 app.register(userRoutes, {
@@ -61,22 +61,22 @@ app.register(commentRoutes, {
   prefix: "/comment"
 })
 
-cron.schedule("*/10 * * * *", async () => {
-  try {
-    const complaints = await prisma.complaint.findMany({
-      orderBy: { createdAt: "desc" },
-      take: 200,
-    });
+// cron.schedule("*/10 * * * *", async () => {
+//   try {
+//     const complaints = await prisma.complaint.findMany({
+//       orderBy: { createdAt: "desc" },
+//       take: 200,
+//     });
 
-    console.log(
-      `[cron] checked ${
-        complaints.length
-      } complaints at ${new Date().toISOString()}`
-    );
-  } catch (error) {
-    console.error("[cron] error while checking complaints:", error);
-  }
-});
+//     console.log(
+//       `[cron] checked ${
+//         complaints.length
+//       } complaints at ${new Date().toISOString()}`
+//     );
+//   } catch (error) {
+//     console.error("[cron] error while checking complaints:", error);
+//   }
+// });
 
 app.listen({ port: env.PORT }, (error) => {
   if (error) {

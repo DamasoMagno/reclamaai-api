@@ -11,65 +11,68 @@ datasource db {
 }
 
 model User {
-  id         Int         @id @default(autoincrement())
-  email      String      @unique
-  role       String      @default("USER")
-  password   String
-  name       String
-  createdAt  DateTime    @default(now())
-  updatedAt  DateTime    @updatedAt
-  complaints Complaint[]
-  comments   Comment[]
+  id        Int       @id @default(autoincrement())
+  email     String    @unique
+  role      String    @default("USER")
+  password  String
+  name      String
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  comments  Comment[]
 
   @@map("user")
 }
 
-model Complaint {
-  id        String   @id @default(uuid())
-  text      String
-  location  String
-  topic     Topic?   @relation(fields: [topicId], references: [id])
-  topicId   String?
-  createdAt DateTime @default(now())
-
-  user   User @relation(fields: [userId], references: [id])
-  userId Int
-
-  @@map("complaint")
-}
-
 model Category {
-  id        String   @id @default(uuid())
-  name      String
-  createdAt DateTime @default(now())
-  topics    Topic[]
+  id   String @id @default(uuid())
+  name String
+
+  subcategories Subcategory[]
 
   @@map("category")
 }
 
-enum Priority {
-  LOW
-  MEDIUM
-  HIGH
+model Subcategory {
+  id         String    @id @default(uuid())
+  name       String
+  category   Category  @relation(fields: [categoryId], references: [id])
+  categoryId String
+  problems   Problem[]
+
+  @@map("subcategory")
 }
 
-// Tópico relacionado à reclamação
-model Topic {
-  id           String      @id @default(uuid())
-  title        String
-  summary      String
-  priority     Priority    @default(MEDIUM)
-  suportCount  Int         @default(0)
-  rejectCount  Int         @default(0)
-  locationHint String?
-  category     Category    @relation(fields: [categoryId], references: [id])
-  categoryId   String
-  categoryHint String?
-  createdAt    DateTime    @default(now())
-  complaints   Complaint[]
-  comments     Comment[]
+model Problem {
+  id          String      @id @default(uuid())
+  location    String
+  subcategory Subcategory @relation(fields: [subcategoryId], references: [id])
+  recurrence  Recurrence
+  impact      Impact
+  createdAt   DateTime    @default(now())
+  status      Status
+  commment    Comment[]
 
-  @@map("topic")
+  subcategoryId String
+
+  @@map("problem")
+}
+
+enum Recurrence {
+  ALWAYS
+  SOMETIMES
+  FIRST
+}
+
+enum Impact {
+  CITY
+  NEIGHBORHOOD
+  STREET
+}
+
+enum Status {
+  STATED
+  IN_PROGRESS
+  FINISHED
 }
 
 model Comment {
@@ -80,8 +83,14 @@ model Comment {
   user   User @relation(fields: [userId], references: [id])
   userId Int
 
-  topic   Topic  @relation(fields: [topicId], references: [id])
-  topicId String
+  problem   Problem @relation(fields: [problemId], references: [id])
+  problemId String
 
   @@map("comment")
+}
+
+enum Priority {
+  LOW
+  MEDIUM
+  HIGH
 }
