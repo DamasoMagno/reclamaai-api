@@ -19,6 +19,7 @@ model User {
   createdAt  DateTime    @default(now())
   updatedAt  DateTime    @updatedAt
   complaints Complaint[]
+  comments   Comment[]
 
   @@map("user")
 }
@@ -39,7 +40,7 @@ model Complaint {
 
 model Category {
   id        String   @id @default(uuid())
-  name      String   @unique
+  name      String
   createdAt DateTime @default(now())
   topics    Topic[]
 
@@ -66,6 +67,21 @@ model Topic {
   categoryHint String?
   createdAt    DateTime    @default(now())
   complaints   Complaint[]
+  comments     Comment[]
 
   @@map("topic")
+}
+
+model Comment {
+  id        String   @id @default(uuid())
+  content   String
+  createdAt DateTime @default(now())
+
+  user   User @relation(fields: [userId], references: [id])
+  userId Int
+
+  topic   Topic  @relation(fields: [topicId], references: [id])
+  topicId String
+
+  @@map("comment")
 }
