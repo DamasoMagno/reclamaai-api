@@ -1,0 +1,71 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id         Int         @id @default(autoincrement())
+  email      String      @unique
+  role       String      @default("USER")
+  password   String
+  name       String
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+  complaints Complaint[]
+
+  @@map("user")
+}
+
+model Complaint {
+  id        String   @id @default(uuid())
+  text      String
+  location  String
+  topic     Topic?   @relation(fields: [topicId], references: [id])
+  topicId   String?
+  createdAt DateTime @default(now())
+
+  user   User @relation(fields: [userId], references: [id])
+  userId Int
+
+  @@map("complaint")
+}
+
+model Category {
+  id        String   @id @default(uuid())
+  name      String   @unique
+  createdAt DateTime @default(now())
+  topics    Topic[]
+
+  @@map("category")
+}
+
+enum Priority {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+// Tópico relacionado à reclamação
+model Topic {
+  id           String      @id @default(uuid())
+  title        String
+  summary      String
+  priority     Priority    @default(MEDIUM)
+  suportCount  Int         @default(0)
+  rejectCount  Int         @default(0)
+  locationHint String?
+  category     Category    @relation(fields: [categoryId], references: [id])
+  categoryId   String
+  categoryHint String?
+  createdAt    DateTime    @default(now())
+  complaints   Complaint[]
+
+  @@map("topic")
+}
