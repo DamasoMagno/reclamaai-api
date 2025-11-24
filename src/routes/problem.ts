@@ -81,14 +81,13 @@ export const problemRoutes: FastifyPluginAsyncZod = async (app) => {
           subcategoryId: z.string().uuid(),
           recurrence: z.enum(["ALWAYS", "SOMETIMES", "FIRST"]),
           impact: z.enum(["CITY", "NEIGHBORHOOD", "STREET"]),
-          status: z.enum(["STATED", "IN_PROGRESS", "FINISHED"])
         }),
       },
     },
     async (request, reply) => {
       const userId = request.user.sub;
  
-      const { location, subcategoryId, recurrence, impact, status } = request.body;
+      const { location, subcategoryId, recurrence, impact } = request.body;
 
       const problemExists = await prisma.problem.findFirst({
         where: {
@@ -97,7 +96,7 @@ export const problemRoutes: FastifyPluginAsyncZod = async (app) => {
       })
 
       if (problemExists) {
-        return reply.status(200).send({ message: "The problem already exists." });
+        return reply.status(200).send({ problemId: problemExists.id });
       }
 
       const subcat = await prisma.subcategory.findUnique({
