@@ -3,7 +3,7 @@ import cors from "@fastify/cors";
 import swagger from "@fastify/swagger";
 import jwt from "@fastify/jwt";
 import scalar from "@scalar/fastify-api-reference";
-import cron from "node-cron";
+// import cron from "node-cron";
 import {
   serializerCompiler,
   validatorCompiler,
@@ -14,7 +14,8 @@ import { env } from "./env";
 import { problemRoutes } from "./routes/problem";
 import { categoryRoutes } from "./routes/category";
 import { userRoutes } from "./routes/user";
-import { commentRoutes } from "./routes/comment"
+import { commentRoutes } from "./routes/comment";
+import { subcategoryRoutes } from "./routes/subcategory";
 
 // import { prisma } from "./lib/prisma";
 
@@ -59,6 +60,10 @@ app.register(categoryRoutes, {
 
 app.register(commentRoutes, {
   prefix: "/comment"
+})
+
+app.register(subcategoryRoutes, {
+  prefix: "/subcategory"
 })
 
 // cron.schedule("*/10 * * * *", async () => {
