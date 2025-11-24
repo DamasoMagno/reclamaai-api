@@ -1,124 +1,180 @@
 import "dotenv/config";
 import { prisma } from "../src/lib/prisma";
+import { Impact, Recurrence, Status } from "../generated/prisma/enums";
 
 async function main() {
   console.log("DATABASE_URL:", process.env.DATABASE_URL);
 
-  // -----------------------------
-  // 1. Criar categorias
-  // -----------------------------
-  const categories = [
-    { name: "Saúde" },
-    { name: "Segurança" },
-    { name: "Infraestrutura" },
-    { name: "Educação" },
-    { name: "Transporte" },
-    { name: "Saneamento" },
-    { name: "Assistência Social" },
-    { name: "Habitação" },
+  // ---------------------------------------------------
+  // 1. Criar Categorias (8 generalistas)
+  // ---------------------------------------------------
+  const categoriesData = [
     { name: "Meio Ambiente" },
-    { name: "Cultura e Lazer" },
-    { name: "Mobilidade Urbana" },
-    { name: "Iluminação Pública" },
-    { name: "Limpeza Urbana" },
-    { name: "Direitos Humanos" },
-    { name: "Tecnologia e Inovação" },
-    { name: "Emprego e Renda" },
+    { name: "Infraestrutura" },
+    { name: "Saúde Pública" },
+    { name: "Transporte" },
+    { name: "Segurança" },
+    { name: "Educação" },
+    { name: "Saneamento" },
     { name: "Administração Pública" },
   ];
 
-  for (const category of categories) {
-    await prisma.category.create({
-      data: { name: category.name },
+  const categories = [];
+
+  for (const cat of categoriesData) {
+    const created = await prisma.category.create({
+      data: {
+        name: cat.name,
+      },
     });
+    categories.push(created);
   }
 
   console.log("✔ Categorias criadas!");
 
-  // -----------------------------
-  // 2. Criar tópico principal
-  // -----------------------------
-  const category = await prisma.category.findFirst({
-    where: { name: "Meio Ambiente" },
-  });
+  // ---------------------------------------------------
+  // 2. Criar Subcategorias (4 para cada categoria)
+  // ---------------------------------------------------
+  const subcategoryMap: Record<string, any[]> = {};
 
-  if (!category) throw new Error("Categoria 'Meio Ambiente' não encontrada.");
+  const subcategoriesByCategory = {
+    "Meio Ambiente": ["Poluição", "Desmatamento", "Queimadas", "Preservação"],
+    "Infraestrutura": ["Vias Urbanas", "Iluminação Pública", "Pavimentação", "Sinalização"],
+    "Saúde Pública": ["Hospitais", "Postos de Saúde", "Agentes de Saúde", "Vigilância Sanitária"],
+    "Transporte": ["Ônibus", "Pontos de Apoio", "Trânsito", "Acessibilidade"],
+    "Segurança": ["Policiamento", "Monitoramento", "Iluminação", "Guarda Municipal"],
+    "Educação": ["Escolas", "Professores", "Merenda Escolar", "Transporte Escolar"],
+    "Saneamento": ["Água", "Esgoto", "Coleta de Lixo", "Drenagem"],
+    "Administração Pública": ["Atendimento", "Serviços Digitais", "Burocracia", "Gestão Pública"],
+  };
 
-  const topic = await prisma.topic.create({
-    data: {
-      title: "Incêndio na serra de Itapipoca-CE",
-      summary:
-        "Incêndio florestal ocorrido entre 28 e 30 de setembro de 2025, devastando grande parte da serra próxima à cidade. Moradores denunciaram demora das autoridades.",
-      priority: "HIGH",
-      categoryId: category.id,
-      locationHint: "Serra de Itapipoca, CE",
-      categoryHint:
-        "Problema ambiental envolvendo fogo descontrolado e demora na resposta pública.",
+  for (const category of categories) {
+    const subs = subcategoriesByCategory[category.name as keyof typeof subcategoriesByCategory];
+
+    for (const sub of subs) {
+      const created = await prisma.subcategory.create({
+        data: {
+          name: sub,
+          categoryId: category.id,
+        },
+      });
+
+      if (!subcategoryMap[category.name]) subcategoryMap[category.name] = [];
+      subcategoryMap[category.name].push(created);
+    }
+  }
+
+  console.log("✔ Subcategorias criadas!");
+
+  // ---------------------------------------------------
+  // 3. Criar problemas
+  // ---------------------------------------------------
+
+  const problemsData = [
+    {
+      title: "Incêndio na serra de Itapipoca",
+      location: "Serra de Itapipoca, CE",
+      sub: subcategoryMap["Meio Ambiente"].find((s) => s.name === "Queimadas")!,
+      recurrence: "FIRST",
+      impact: "CITY",
+      status: "STATED",
     },
-  });
-
-  console.log("✔ Tópico criado:", topic.title);
-
-  // -----------------------------
-  // 3. Criar usuários fictícios
-  // -----------------------------
-  const fakeUsers = [
-    { name: "Maria do Carmo Oliveira", email: "maria.carmo@email.com" },
-    { name: "João Victor Mendes", email: "joao.mendes@email.com" },
-    { name: "Ana Luiza Ferreira", email: "ana.luiza@email.com" },
-    { name: "Carlos Henrique Lopes", email: "carlos.hlopes@email.com" },
-    { name: "Fernanda Araújo Silva", email: "fernanda.araujo@email.com" },
-    { name: "Rafael Monteiro Dias", email: "rafael.dias@email.com" },
-    { name: "Juliana Beatriz Costa", email: "juliana.costa@email.com" },
-    { name: "Pedro Lucas Tavares", email: "pedro.tavares@email.com" },
-    { name: "Larissa Lima Ribeiro", email: "larissa.ribeiro@email.com" },
-    { name: "Sérgio Matos Almeida", email: "sergio.almeida@email.com" },
+    {
+      title: "Esgoto a céu aberto",
+      location: "Rua João Batista, Bairro Centro",
+      sub: subcategoryMap["Saneamento"].find((s) => s.name === "Esgoto")!,
+      recurrence: "ALWAYS",
+      impact: "STREET",
+      status: "IN_PROGRESS",
+    },
+    {
+      title: "Acúmulo de lixo nas ruas",
+      location: "Avenida Perimetral, Itapipoca",
+      sub: subcategoryMap["Saneamento"].find((s) => s.name === "Coleta de Lixo")!,
+      recurrence: "SOMETIMES",
+      impact: "NEIGHBORHOOD",
+      status: "STATED",
+    },
   ];
 
-  const createdUsers = [];
+  const problems = [];
 
-  for (const usr of fakeUsers) {
-    const user = await prisma.user.create({
+  for (const data of problemsData) {
+    const created = await prisma.problem.create({
       data: {
-        name: usr.name,
-        email: usr.email,
-        password: "hash_senha_teste",
+        location: data.location,
+        recurrence: data.recurrence as Recurrence,
+        impact: data.impact as Impact,
+        status: data.status as Status,
+        subcategoryId: data.sub.id,
       },
     });
 
-    createdUsers.push(user);
+    problems.push(created);
   }
 
-  console.log("✔ 10 usuários criados!");
+  console.log("✔ Problemas criados!");
 
-  // -----------------------------
-  // 4. Reclamações geradas
-  // -----------------------------
-  const complaintsTexts = [
-    "A fumaça tomou conta da cidade inteira e dificultou a respiração de todos. As autoridades demoraram demais para agir.",
-    "O fogo avançou muito rápido e ninguém apareceu para ajudar os moradores próximos da serra.",
-    "Acordei de madrugada com minha casa cheia de fuligem. Isso poderia ter sido evitado se os órgãos responsáveis tivessem agido antes.",
-    "Os animais silvestres estão fugindo para as áreas urbanas. A situação está descontrolada.",
-    "A prefeitura só se manifestou depois de quase 24 horas de incêndio. Um absurdo.",
-    "Os moradores fizeram vaquinha para comprar água e ajudar a combater o fogo enquanto as autoridades não chegavam.",
-    "Meu avô, que tem problemas respiratórios, passou mal pela grande quantidade de fumaça.",
-    "As chamas estavam tão perto da estrada que ficou perigoso trafegar. Falta total de preparo.",
-    "A serra está devastada. Uma área enorme de mata foi perdida por descaso.",
-    "Muitos voluntários ajudaram, mas o poder público falhou completamente no tempo de resposta.",
-  ];
+  // ---------------------------------------------------
+  // 4. Criar comentários (4 para cada problema)
+  // ---------------------------------------------------
 
-  for (let i = 0; i < complaintsTexts.length; i++) {
-    await prisma.complaint.create({
+  const fakeUsers = [];
+
+  for (let i = 1; i <= 12; i++) {
+    const usr = await prisma.user.create({
       data: {
-        text: complaintsTexts[i],
-        location: "Serra de Itapipoca, CE",
-        topicId: topic.id,
-        userId: createdUsers[i].id,
+        name: `Usuário ${i}`,
+        email: `usuario${i}@email.com`,
+        password: "senha_teste",
       },
     });
+
+    fakeUsers.push(usr);
   }
 
-  console.log("✔ 10 reclamações criadas!");
+  console.log("✔ Usuários criados!");
+
+  const commentsByProblem = [
+    [
+      "A fumaça tomou conta do bairro inteiro!",
+      "Demoraram demais para agir, isso é um absurdo.",
+      "Os moradores tiveram que ajudar enquanto nada era feito.",
+      "A serra ficou devastada, é muito triste ver isso acontecendo.",
+    ],
+    [
+      "O cheiro é insuportável, impossível morar assim.",
+      "Esse esgoto escorrendo na rua é um risco para as crianças.",
+      "Já faz meses e ninguém resolve.",
+      "A proliferação de insetos está aumentando cada dia mais.",
+    ],
+    [
+      "O acúmulo de lixo está atraindo muitos animais.",
+      "A coleta deveria ser mais frequente.",
+      "A rua fica intransitável de tanto lixo.",
+      "Há semanas ninguém passa recolhendo.",
+    ],
+  ];
+
+  let userIndex = 0;
+
+  for (let i = 0; i < problems.length; i++) {
+    const problem = problems[i];
+    const comments = commentsByProblem[i];
+
+    for (const content of comments) {
+      await prisma.comment.create({
+        data: {
+          content,
+          problemId: problem.id,
+          userId: fakeUsers[userIndex].id,
+        },
+      });
+      userIndex++;
+    }
+  }
+
+  console.log("✔ Comentários criados!");
   console.log("🌱 SEED COMPLETO FINALIZADO!");
 }
 
