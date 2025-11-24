@@ -87,8 +87,18 @@ export const problemRoutes: FastifyPluginAsyncZod = async (app) => {
     },
     async (request, reply) => {
       const userId = request.user.sub;
-
+ 
       const { location, subcategoryId, recurrence, impact, status } = request.body;
+
+      const problemExists = await prisma.problem.findFirst({
+        where: {
+          location, subcategoryId,
+        }
+      })
+
+      if (problemExists) {
+        return reply.status(200).send({ message: "The problem already exists." });
+      }
 
       const subcat = await prisma.subcategory.findUnique({
         where: { id: subcategoryId },
