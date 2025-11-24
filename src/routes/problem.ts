@@ -27,6 +27,7 @@ export const problemRoutes: FastifyPluginAsyncZod = async (app) => {
         skip,
         include: {
           subcategory: true,
+          commment: true
         },
       });
 
