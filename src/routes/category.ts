@@ -26,6 +26,9 @@ export const categoryRoutes: FastifyPluginAsyncZod = async (app) => {
       const categories = await prisma.category.findMany({
         take,
         skip,
+        include: {
+          subcategories: true,
+        }
       });
 
       return reply.status(200).send({ categories });
