@@ -114,7 +114,7 @@ export const problemRoutes: FastifyPluginAsyncZod = async (app) => {
           subcategoryId,
           recurrence,
           impact,
-          status,
+          status: 'STATED',
         },
       });
 
