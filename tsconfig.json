@@ -1,9 +1,14 @@
 {
   "compilerOptions": {
-    "module": "ESNext",
-    "moduleResolution": "node",
-    "target": "ES2023",
+    "module": "CommonJS", // Mudou de NodeNext para CommonJS
+    "moduleResolution": "node", // Mudou de NodeNext para node
+    "target": "ES2022",
     "strict": true,
-    "esModuleInterop": true
-  }
+    "esModuleInterop": true,
+    "outDir": "./build", // Onde os arquivos JS vão ficar
+    "rootDir": "./src", // Onde seus arquivos TS estão
+    "skipLibCheck": true
+  },
+  "include": ["src/**/*"],
+  "exclude": ["node_modules"]
 }

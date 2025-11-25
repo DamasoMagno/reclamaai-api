@@ -7,7 +7,6 @@ export const problemRoutes: FastifyPluginAsyncZod = async (app) => {
   app.get(
     "/",
     {
-      preHandler: [authenticate],
       schema: {
         querystring: z.object({
           page: z.coerce.number().min(1).default(1),
@@ -27,7 +26,7 @@ export const problemRoutes: FastifyPluginAsyncZod = async (app) => {
         skip,
         include: {
           subcategory: true,
-          commment: true
+          commment: true,
         },
       });
 
@@ -38,7 +37,6 @@ export const problemRoutes: FastifyPluginAsyncZod = async (app) => {
   app.get(
     "/:id",
     {
-      preHandler: [authenticate],
       schema: {
         params: z.object({
           id: z.string().uuid(),
@@ -75,7 +73,6 @@ export const problemRoutes: FastifyPluginAsyncZod = async (app) => {
   app.post(
     "/",
     {
-      preHandler: [authenticate],
       schema: {
         body: z.object({
           location: z.string().min(1),
@@ -86,15 +83,15 @@ export const problemRoutes: FastifyPluginAsyncZod = async (app) => {
       },
     },
     async (request, reply) => {
-      const userId = request.user.sub;
- 
+      // const userId = request.user.sub;
       const { location, subcategoryId, recurrence, impact } = request.body;
 
       const problemExists = await prisma.problem.findFirst({
         where: {
-          location, subcategoryId,
-        }
-      })
+          location,
+          subcategoryId,
+        },
+      });
 
       if (problemExists) {
         return reply.status(200).send({ problemId: problemExists.id });
@@ -114,7 +111,7 @@ export const problemRoutes: FastifyPluginAsyncZod = async (app) => {
           subcategoryId,
           recurrence,
           impact,
-          status: 'STATED',
+          status: "STATED",
         },
       });
 
@@ -125,7 +122,6 @@ export const problemRoutes: FastifyPluginAsyncZod = async (app) => {
   app.put(
     "/:id",
     {
-      preHandler: [authenticate],
       schema: {
         params: z.object({
           id: z.string().uuid(),
@@ -148,7 +144,6 @@ export const problemRoutes: FastifyPluginAsyncZod = async (app) => {
       if (!problem) {
         return reply.status(404).send({ message: "Problem not found" });
       }
-
 
       const updated = await prisma.problem.update({
         where: { id },

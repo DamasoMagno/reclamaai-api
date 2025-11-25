@@ -28,7 +28,7 @@ export const categoryRoutes: FastifyPluginAsyncZod = async (app) => {
         skip,
         include: {
           subcategories: true,
-        }
+        },
       });
 
       return reply.status(200).send({ categories });
@@ -63,7 +63,6 @@ export const categoryRoutes: FastifyPluginAsyncZod = async (app) => {
   app.post(
     "/",
     {
-      preHandler: [authenticate],
       schema: {
         body: z.object({
           name: z.string(),
@@ -114,7 +113,6 @@ export const categoryRoutes: FastifyPluginAsyncZod = async (app) => {
   app.delete(
     "/:id",
     {
-      preHandler: [authenticate],
       schema: {
         params: z.object({
           id: z.string(),
