@@ -5,6 +5,7 @@ const envSchema = z.object({
   DATABASE_URL: z.string().min(1, { message: "DATABASE_URL is required" }),
   PORT: z.coerce.number().min(1, { message: "PORT is required" }).default(3000),
   SECRET_KEY: z.string().min(1, { message: "SECRET_KEY is required" }),
+  HOST: z.string().min(1, { message: "HOST is required" }).default("0.0.0.0"),
   OPENAI_API_KEY: z.string().min(1, { message: "OPENAI_API_KEY is required" }),
 });
 

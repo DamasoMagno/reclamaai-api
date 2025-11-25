@@ -59,12 +59,12 @@ app.register(categoryRoutes, {
 });
 
 app.register(commentRoutes, {
-  prefix: "/comment"
-})
+  prefix: "/comment",
+});
 
 app.register(subcategoryRoutes, {
-  prefix: "/subcategory"
-})
+  prefix: "/subcategory",
+});
 
 // cron.schedule("*/10 * * * *", async () => {
 //   try {
@@ -83,12 +83,11 @@ app.register(subcategoryRoutes, {
 //   }
 // });
 
-app.listen({ port: env.PORT }, (error) => {
+app.listen({ port: env.PORT, host: env.HOST }, (error) => {
   if (error) {
     console.error("Error starting server:", error);
     process.exit(1);
   }
 
-  console.log(`Server listening at http://localhost:${env.PORT}`);
-  console.log(`Docs available at http://localhost:${env.PORT}/docs`);
+  console.log(`Server listening on port ${env.PORT}`);
 });
