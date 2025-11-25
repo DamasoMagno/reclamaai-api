@@ -36,7 +36,7 @@ app.register(jwt, {
 app.register(swagger, {
   openapi: {
     info: {
-      title: "API TopBurguer",
+      title: "API Reclama AI",
       version: "1.0.0",
     },
   },
