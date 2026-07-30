@@ -1,102 +1,133 @@
 # ReclamaAI API
 
-Backend em Node.js/TypeScript para cadastro e acompanhamento de problemas públicos. A API usa Fastify, Prisma (PostgreSQL) e JWT, já expõe documentação via Swagger/Scalar em `/docs` e possui seed com dados de exemplo.
+API em Node.js + TypeScript para registrar e acompanhar problemas públicos, com autenticação JWT, persistência em PostgreSQL via Prisma e documentação automática em `/docs`.
 
-## Tecnologias
-- Fastify + Zod (`fastify-type-provider-zod`) para rotas e validações
-- Prisma (adapter `@prisma/adapter-pg`) com PostgreSQL
-- JWT (`@fastify/jwt`) para autenticação
-- Swagger + Scalar para documentação interativa
-- bcrypt para hashing de senhas
+## Stack
+
+- Fastify
+- TypeScript
+- Prisma + PostgreSQL
+- Zod
+- JWT (`@fastify/jwt`)
+- Swagger + Scalar
 
 ## Pré-requisitos
-- Node.js 18+ e npm
-- Banco PostgreSQL acessível via `DATABASE_URL`
 
-## Configuração rápida
-1) Instale dependências  
-`npm install`
+- Node.js 18+
+- npm
+- PostgreSQL disponível
 
-2) Crie um arquivo `.env` na raiz com:
+## Configuração
+
+1. Instale dependências:
+
+```bash
+npm install
 ```
-DATABASE_URL="postgresql://usuario:senha@host:5432/nome_do_banco?schema=public"
+
+2. Crie o arquivo `.env` na raiz:
+
+```env
+DATABASE_URL="******localhost:5432/reclamaai?schema=public"
 PORT=3000
-SECRET_KEY="chave-jwt"
+HOST="0.0.0.0"
+SECRET_KEY="sua-chave-jwt"
 OPENAI_API_KEY="sua-chave-openai"
 ```
 
-3) Gere o client do Prisma e aplique as migrations existentes  
-`npx prisma generate`  
-`npx prisma migrate deploy`   # ou `npx prisma migrate dev` em ambiente local
+3. Gere o client Prisma e aplique as migrations:
 
-4) (Opcional) Popule o banco com dados de demonstração  
-`npm run seed`
+```bash
+npx prisma generate
+npx prisma migrate deploy
+```
 
-5) Suba o servidor em modo desenvolvimento  
-`npm run dev`
+> Em ambiente local de desenvolvimento, você pode usar `npx prisma migrate dev`.
 
-API disponível em `http://localhost:${PORT}` com documentação em `http://localhost:${PORT}/docs`.
+4. (Opcional) Popule o banco com dados de exemplo:
 
-## Scripts npm
-- `npm run dev`: inicia o servidor com hot-reload (tsx watch).
-- `npm run seed`: roda `prisma/seed.ts` e insere categorias, subcategorias, problemas e usuários/comentários de exemplo.
+```bash
+npm run seed
+```
 
-## Modelos principais (Prisma)
-- User: email único, senha com hash, role (padrão `USER`), relação com comentários.
-- Category e Subcategory: categorias gerais e subcategorias relacionadas.
-- Problem: localização, subcategoria, recorrência (`ALWAYS`, `SOMETIMES`, `FIRST`), impacto (`CITY`, `NEIGHBORHOOD`, `STREET`) e status (`STATED`, `IN_PROGRESS`, `FINISHED`).
-- Comment: conteúdo, usuário autor e problema associado.
+## Execução
+
+### Desenvolvimento
+
+```bash
+npm run dev
+```
+
+### Build e produção
+
+```bash
+npm run build
+npm start
+```
+
+## Scripts disponíveis
+
+- `npm run dev`: inicia API com hot reload (`tsx watch`).
+- `npm run build`: gera client Prisma e compila TypeScript.
+- `npm start`: executa versão compilada.
+- `npm run seed`: popula banco com dados iniciais.
+
+## Documentação da API
+
+- Swagger/Scalar: `http://localhost:3000/docs` (ou porta definida em `PORT`)
 
 ## Autenticação
-Autorização via JWT. Obtenha um token em `POST /user/auth` e envie nos endpoints protegidos usando o header `Authorization: Bearer <token>`. Rotas de leitura de categorias, subcategorias e comentários são públicas; rotas de problemas exigem token.
 
-## Principais endpoints
-Base URL: `http://localhost:${PORT}`
+Use `POST /user/auth` para obter o token JWT e envie no header:
 
-**Auth / Usuários (`/user`)**
-- `POST /user/register` — cria usuário (email, password, name).
-- `POST /user/auth` — autentica e retorna JWT.
+```http
+Authorization: ******
+```
 
-**Categorias (`/category`)**
-- `GET /category?page&limit` — lista categorias com subcategororias. Paginação padrão `page=1&limit=10`.
-- `GET /category/:id` — busca categoria por id.
-- `POST /category` — cria (JWT).
-- `PUT /category/:id` — atualiza nome (JWT).
-- `DELETE /category/:id` — exclui (JWT).
+## Endpoints principais
 
-**Subcategorias (`/subcategory`)**
-- `GET /subcategory?page&limit` — lista com categoria relacionada.
-- `GET /subcategory/:id` — detalhe com categoria.
-- `POST /subcategory` — cria (JWT, exige `categoryId` existente).
-- `PUT /subcategory/:id` — edita nome/categoria (JWT).
-- `DELETE /subcategory/:id` — exclui (JWT).
+### Usuário (`/user`)
 
-**Problemas (`/problem`)** — todas as rotas exigem JWT
-- `GET /problem?page&limit` — lista ordenada por criação (inclui subcategoria e comentários).
-- `GET /problem/:id` — detalhe com categoria, subcategoria e comentários + autor.
-- `POST /problem` — cria problema (`location`, `subcategoryId`, `recurrence`, `impact`). Se já existir combinação `location + subcategoryId`, retorna o id existente.
-- `PUT /problem/:id` — atualiza campos básicos.
-- `DELETE /problem/:id` — remove.
+- `POST /user/register`
+- `POST /user/auth`
 
-**Comentários (`/comment`)**
-- `GET /comment?page&limit` — lista com usuário e problema.
-- `GET /comment/:id` — detalhe.
-- `POST /comment` — cria comentário (`content`, `problemId`) atrelado ao usuário autenticado.
-- `PUT /comment/:id` — edita conteúdo (JWT, apenas autor).
-- `DELETE /comment/:id` — remove (JWT, apenas autor).
+### Categoria (`/category`)
 
-## Documentação e testes rápidos
-- Swagger/Scalar: `http://localhost:${PORT}/docs`
-- Health simples: subir com `npm run dev` e chamar `GET /category` para validar conexão com DB.
+- `GET /category`
+- `GET /category/:id`
+- `POST /category`
+- `PUT /category/:id` (JWT)
+- `DELETE /category/:id`
 
-## Estrutura de pastas (resumo)
-- `src/server.ts` — bootstrap do Fastify e registro das rotas/plugins.
-- `src/routes/` — rotas por recurso.
-- `src/lib/` — instâncias de Prisma e OpenAI.
-- `prisma/schema.prisma` — modelos e enums do banco.
-- `prisma/migrations/` — migrations versionadas.
-- `prisma/seed.ts` — carga de dados exemplo.
+### Subcategoria (`/subcategory`)
 
-## Observações
-- O client Prisma gerado fica em `generated/prisma`.
-- Ajuste `PORT` conforme necessário; CORS está liberado para todos os domínios em desenvolvimento.
+- `GET /subcategory`
+- `GET /subcategory/:id`
+- `POST /subcategory` (JWT)
+- `PUT /subcategory/:id` (JWT)
+- `DELETE /subcategory/:id` (JWT)
+
+### Problema (`/problem`)
+
+- `GET /problem`
+- `GET /problem/:id`
+- `POST /problem`
+- `PUT /problem/:id`
+- `DELETE /problem/:id` (JWT)
+
+### Comentário (`/comment`)
+
+- `GET /comment`
+- `GET /comment/:id`
+- `POST /comment` (JWT)
+- `PUT /comment/:id` (JWT, apenas autor)
+- `DELETE /comment/:id` (JWT, apenas autor)
+
+## Estrutura do projeto
+
+- `/home/runner/work/reclamaai-api/reclamaai-api/src/server.ts`: bootstrap da API
+- `/home/runner/work/reclamaai-api/reclamaai-api/src/routes`: rotas por recurso
+- `/home/runner/work/reclamaai-api/reclamaai-api/src/lib`: integrações (Prisma/OpenAI)
+- `/home/runner/work/reclamaai-api/reclamaai-api/prisma/schema.prisma`: modelos do banco
+- `/home/runner/work/reclamaai-api/reclamaai-api/prisma/migrations`: histórico de migrations
+- `/home/runner/work/reclamaai-api/reclamaai-api/prisma/seed.ts`: seed de dados
